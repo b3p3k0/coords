@@ -6,7 +6,7 @@ A simple command-line tool to fetch GPS coordinates from gpsd and display them i
 
 - **Multiple formats**: Display coordinates in decimal, DMS, JSON, UTM, or MGRS format
 - **Flexible monitoring**: Single reading or continuous watching with customizable intervals
-- **Simple interface**: Works out of the box with sensible defaults
+- **100% vibe coded**: Because I have a Claude subscription, so why not use it?
 
 ## Installation
 
@@ -22,6 +22,7 @@ pip install .
 
 - **gpsd**: Must be running and connected to your GPS hardware
 - **Python 3**: Required for execution
+- **an actual GPS dongle**: This shouldn't need to be said, but...
 
 ## Usage
 
@@ -85,12 +86,6 @@ options:
 - **mgrs**: Military Grid Reference System coordinate conversion
 - **packaging**: Required by mgrs module
 
-## Error Handling
-
-- **No GPS fix**: Clear error messages when GPS data is unavailable
-- **Connection errors**: Helpful messages when gpsd is not running
-- **Input validation**: Prevents invalid watch intervals
-
 ## License
 
-Open source project by Kevin Nord.
+GPL 3 see LICENSE for details.
