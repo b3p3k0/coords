@@ -1,0 +1,120 @@
+#!/usr/bin/env python3
+"""
+coords.py - Simple command line tool to read GPS coordinates from gpsd
+and output them in multiple formats (decimal, DMS, JSON, UTM, MGRS).
+"""
+
+import sys
+import json
+import argparse
+import time
+import gpsd
+import utm
+import mgrs
+
+
+def decimal_format(lat, lon):
+    return f"LAT: {lat:.6f}, LON: {lon:.6f}"
+
+
+def dms_format(lat, lon):
+    def to_dms(value, pos, neg):
+        degrees = int(abs(value))
+        minutes = int((abs(value) - degrees) * 60)
+        seconds = (abs(value) - degrees - minutes / 60) * 3600
+        direction = pos if value >= 0 else neg
+        return f"{degrees}°{minutes}'{seconds:.2f}\"{direction}"
+
+    return f"LAT: {to_dms(lat, 'N', 'S')}, LON: {to_dms(lon, 'E', 'W')}"
+
+
+def json_format(lat, lon):
+    return json.dumps({"lat": lat, "lon": lon})
+
+
+def utm_format(lat, lon):
+    easting, northing, zone_number, zone_letter = utm.from_latlon(lat, lon)
+    return f"Zone: {zone_number}{zone_letter}, Easting: {int(easting)}, Northing: {int(northing)}"
+
+
+def mgrs_format(lat, lon):
+    m = mgrs.MGRS()
+    mgrs_str = m.toMGRS(lat, lon)
+    return mgrs_str.decode() if isinstance(mgrs_str, bytes) else mgrs_str
+
+
+def get_fix(max_attempts=5):
+    attempts = 0
+    while attempts < max_attempts:
+        try:
+            packet = gpsd.get_current()
+            if packet.mode >= 2 and packet.lat is not None and packet.lon is not None:
+                return packet.lat, packet.lon
+        except (gpsd.NoFixError, UserWarning):
+            pass
+        attempts += 1
+        time.sleep(1)
+    return None, None
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Print current GPS coordinates from gpsd.")
+    parser.add_argument("--format", choices=["decimal", "dms", "json", "utm", "mgrs"],
+                        default="decimal", help="Output format (default: decimal)")
+    parser.add_argument("--once", action="store_true", help="Print one fix and exit")
+    parser.add_argument("--watch", nargs="?", const=10, type=int, metavar="SECONDS", 
+                        help="Continuously print fixes every SECONDS (default: 10, minimum: 1)")
+    args = parser.parse_args()
+
+    # Validate watch interval
+    if args.watch is not None and args.watch < 1:
+        print("Error: watch interval must be at least 1 second", file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        gpsd.connect()
+    except Exception as e:
+        print(f"Error: could not connect to gpsd ({e})", file=sys.stderr)
+        sys.exit(1)
+
+    formats = {
+        "decimal": decimal_format,
+        "dms": dms_format,
+        "json": json_format,
+        "utm": utm_format,
+        "mgrs": mgrs_format,
+    }
+
+    fmt_func = formats[args.format]
+
+    try:
+        if args.once:
+            lat, lon = get_fix()
+            if lat is None or lon is None:
+                print("No fix available. Is gpsd running and your hardware connected?\n", file=sys.stderr)
+                sys.exit(1)
+            print(fmt_func(lat, lon))
+
+        elif args.watch is not None:
+            while True:
+                lat, lon = get_fix(max_attempts=1)
+                if lat is not None and lon is not None:
+                    print(fmt_func(lat, lon))
+                time.sleep(args.watch)
+
+        else:
+            # Default behavior: show coordinates in decimal format
+            lat, lon = get_fix()
+            if lat is None or lon is None:
+                print("No fix available.", file=sys.stderr)
+                sys.exit(1)
+            print(decimal_format(lat, lon))
+            print("\nRun with --help for all options")
+
+    except KeyboardInterrupt:
+        print("\nExiting.")
+        sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()
