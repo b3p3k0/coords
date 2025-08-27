@@ -11,17 +11,26 @@ A simple command-line tool to fetch GPS coordinates from gpsd and display them i
 ## Installation
 
 ```bash
-# Install dependencies
-pip install -r requirements.txt
+# Create ~/.bin directory if it doesn't exist
+mkdir -p ~/.bin
 
-# Install as CLI tool
-pip install .
+# Copy the coords executable and dependencies to your local bin directory
+cp coords ~/.bin/
+cp -r coords-deps ~/.bin/
+
+# Add ~/.bin to your PATH if not already added
+echo 'export PATH="$HOME/.bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+
+# Test the installation
+coords --help
 ```
 
 ## Prerequisites
 
 - **gpsd**: Must be running and connected to your GPS hardware
 - **Python 3**: Required for execution
+- **No additional dependencies**: All Python packages are bundled in `coords-deps/`
 
 ## Usage
 
@@ -80,6 +89,7 @@ options:
 
 ## Dependencies
 
+All dependencies are included in the `coords-deps/` directory:
 - **gpsd-py3**: Interface to gpsd daemon
 - **utm**: Latitude/longitude to UTM coordinate conversion
 - **mgrs**: Military Grid Reference System coordinate conversion

@@ -1,13 +1,22 @@
 #!/usr/bin/env python3
 """
-coords.py - Simple command line tool to read GPS coordinates from gpsd
+coords - Simple command line tool to read GPS coordinates from gpsd
 and output them in multiple formats (decimal, DMS, JSON, UTM, MGRS).
 """
 
 import sys
+import os
 import json
 import argparse
 import time
+
+# Get the directory containing this script
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Prepend bundled dependencies to Python path
+sys.path.insert(0, os.path.join(script_dir, "coords-deps"))
+
+# Import dependencies
 import gpsd
 import utm
 import mgrs
@@ -91,7 +100,7 @@ def main():
         if args.once:
             lat, lon = get_fix()
             if lat is None or lon is None:
-                print("No fix available. Is gpsd running and your hardware connected?\n", file=sys.stderr)
+                print("No fix available. Is gpsd running and your hardware connected?", file=sys.stderr)
                 sys.exit(1)
             print(fmt_func(lat, lon))
 
@@ -109,7 +118,7 @@ def main():
                 print("No fix available.", file=sys.stderr)
                 sys.exit(1)
             print(decimal_format(lat, lon))
-            print("\nRun with --help for all options")
+            print("Run with --help for all options")
 
     except KeyboardInterrupt:
         print("\nExiting.")
