@@ -1,6 +1,6 @@
 # coords
 
-A simple command-line tool to fetch GPS coordinates from gpsd and display them in multiple formats.
+A simple Linux command-line tool to fetch GPS coordinates from gpsd and display them in multiple formats.
 
 ## Features
 
